@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import bodyParser from "body-parser";
 import cors from "cors";
+import { Connection, Request } from "tedious";
 
 const app = express();
 const PORT = 5000;
@@ -12,6 +13,29 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const users = [];
+
+const config = {
+    server: 'localhost',
+    authentication: {
+        type: 'default',
+        options: {
+            userName: 'sa',
+            password: '123456'
+        }
+    },
+    options: {
+        database: 'nPCs',
+        trustServerCertificate: true
+    }
+}
+
+const connection = new Connection(config)
+
+connection.on('connect', (err) => {
+    if (err) {
+        console.log(err)
+    } 
+})
 
 // Middleware: Verificacion de Token
 const verifyToken = (req, res, next) => {
@@ -43,5 +67,5 @@ app.get("/protected", verifyToken, (req, res) => {
     res.status(200).json({ message: "Datos protegidos accedidos", user: req.user });
 });
 
-app.listen(PORT, () => console.log('Servidor funcionando en: http://localhost:${PORT}')
+app.listen(PORT, () => console.log(`Servidor funcionando en: http://localhost:${PORT}`)
 );
