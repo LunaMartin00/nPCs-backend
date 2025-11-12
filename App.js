@@ -5,9 +5,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import { Connection, Request } from "tedious";
 
-const app = express();
-const PORT = 5000;
-export const JWT_SECRET = "f547c2b93ab5d4f3e03860c7cd2d8fee";
+export const app = express();
 
 app.use(bodyParser.json());
 app.use(cors());
