@@ -12,21 +12,6 @@ export const JWT_SECRET = "f547c2b93ab5d4f3e03860c7cd2d8fee";
 app.use(bodyParser.json());
 app.use(cors());
 
-const config = {
-    server: 'localhost',
-    authentication: {
-        type: 'default',
-        options: {
-            userName: 'sa',
-            password: '123456'
-        }
-    },
-    options: {
-        database: 'nPCs',
-        trustServerCertificate: true
-    }
-}
-
 // Rutas
 app.post("/signUp/cliente", async (req, res) => {
     const { firstNames, lastNames, email, username, password } = req.body;
