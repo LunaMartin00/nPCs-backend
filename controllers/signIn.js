@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { JWT_SECRET } from "../keys/keys";
+import { JWT_SECRET } from "../keys/keys.js";
 
 export const signIn = async (req, res) => {
     const { email, password } = req.body;

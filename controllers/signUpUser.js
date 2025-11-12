@@ -1,5 +1,6 @@
-import { config } from "../data/db/connection"
+import { config } from "../data/db/connection.js";
 import { Connection, Request } from "tedious";
+import bcrypt from "bcrypt";
 
 export const signUpUser = async (req, res) => {
     const { firstNames, lastNames, email, username, password } = req.body;
