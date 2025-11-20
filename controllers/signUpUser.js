@@ -1,5 +1,5 @@
 import { config } from "../data/db/connection.js";
-import { Connection, Request } from "tedious";
+import { Connection, Request, TYPES } from "tedious";
 import bcrypt from "bcrypt";
 
 export const signUpUser = async (req, res) => {
@@ -14,10 +14,7 @@ export const signUpUser = async (req, res) => {
     connection.on("connect", (err) => {
         if (err) return res.status(500).json({ message: "No se ha podido conectar a la base de datos", err });
 
-        const checkQuery = `
-        SELECT COUNT(*) AS count 
-        FROM Cliente 
-        WHERE correo_electronico = @email OR usuario = @username`;
+        const checkQuery = "SELECT COUNT(*) AS count FROM Cliente WHERE correo_electronico = @email OR usuario = @username";
 
         const checkRequest = new Request(checkQuery, (err) => {
             if (err) return res.status(500).json({ message: "Error al verificar la existencia del usuario", err });
@@ -37,8 +34,7 @@ export const signUpUser = async (req, res) => {
                 return res.status(409).json({ message: "Ya existe ese usuario" });
             }
 
-            const insertQuery = `INSERT INTO Cliente (nombres, apellidos, correo_electronico, usuario, contrasena)
-            VALUES (@firstNames, @lastNames, @email, @username, @password)`;
+            const insertQuery = "INSERT INTO Cliente (nombres, apellidos, correo_electronico, usuario, contrasena) VALUES (@firstNames, @lastNames, @email, @username, @password)";
 
             const insertRequest = new Request(insertQuery, (err) => {
                 if (err) {
