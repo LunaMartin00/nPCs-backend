@@ -9,49 +9,86 @@ export const signIn = async (req, res) => {
     const connection = new Connection(config);
 
     if (!email || !password)
-        return console.error("Hay campos incompletos en la información");
+        return res.status(400).json({ message: "Hay campos incompletos en la información"});
 
     connection.on("connect", async (err) => {
-        if (err) return console.error("No se ha podido conectar a la base de datos", err);
+        if (err) return res.status(500).json("No se ha podido conectar a la base de datos", err);
 
-        const signInQuery = "SELECT * FROM Cliente WHERE correo_electronico = @correo_electronico";
-
-        const checkRequest = new Request(signInQuery, (err, rowCount) => {
-            if (err) return console.error("Error al verificar la existencia del usuario", err);
-
-            if (rowCount < 1) {
-                return console.log("No se ha encontrado el usuario");
+        const managerQuery = "SELECT * FROM EncargadoDeTienda WHERE correo_electronico = @correo_electronico";
+        const managerRequest = new Request(managerQuery, (err) => {
+            if (err) {
+                connection.close();
+                return res.status(500).json({ message: "Error al verificar la existencia del encargado de tienda", err });
             }
         });
 
-        checkRequest.addParameter("correo_electronico", TYPES.VarChar, email);
+        managerRequest.addParameter("correo_electronico", TYPES.VarChar, email);
 
         let userFind = null;
+        let role = null;
 
-        checkRequest.on("row", (columns) => {
+        managerRequest.on("row", (columns) => {
             const user = {};
             columns.forEach((col) => {
                 user[col.metadata.colName] = col.value;
             });
             userFind = user;
+            role = "encargado de tienda";
         });
 
-        checkRequest.on("requestCompleted", async () => {
-            if (!userFind) {
-                return res.status(400).json({ message: "Usuario no encontrado" });
+        managerRequest.on("requestCompleted", async () => {
+            const proceedAuth = async () => {
+                if (!userFind) {
+                    connection.close();
+                    return res.status(400).json({ message: "Usuario no encontrado" });
+                }
+
+                const isPasswordValid = await bcrypt.compare(password, userFind.contrasena);
+                if (!isPasswordValid) {
+                    connection.close();
+                    return res.status(400).json({ message: "Credenciales no válidas" });
+                }
+
+                const userId = userFind.id;
+                const payload = { id: userId, role };
+                const _jwt = jwt.sign(payload, JWT_SECRET, { expiresIn: "8h" });
+
+                connection.close();
+                return res.status(200).json({ success: true, message: "Sesión iniciada correctamente", _jwt, role });
+            };
+
+            if (userFind) {
+                return proceedAuth();
             }
 
-            const isPasswordValid = await bcrypt.compare(password, userFind.contrasena); // false si no es cierto | true si las constraseñas coinciden
-            if (!isPasswordValid)
-                return res.status(400).json({ message: "Credenciales no válidas" });
-
-            const _jwt = jwt.sign({ id: userFind.id }, JWT_SECRET, {
-                expiresIn: "8h",
+            const clientQuery = "SELECT * FROM Cliente WHERE correo_electronico = @correo_electronico";
+            const clientRequest = new Request(clientQuery, (err) => {
+                if (err) {
+                    connection.close();
+                    return res.status(500).json({ message: "Error al verificar la existencia del usuario", err });
+                }
             });
 
-            return res.status(200).json({ success: true, message: "Sesión iniciada correctamente", _jwt });
-        })
-        connection.execSql(checkRequest);
+            clientRequest.addParameter("correo_electronico", TYPES.VarChar, email);
+
+            clientRequest.on("row", (columns) => {
+                const user = {};
+                columns.forEach((col) => {
+                    user[col.metadata.colName] = col.value;
+                });
+                userFind = user;
+                role = "cliente";
+            });
+
+            clientRequest.on("requestCompleted", async () => {
+                return proceedAuth();
+            });
+
+            connection.execSql(clientRequest);
+        });
+
+        connection.execSql(managerRequest);
     });
+
     connection.connect();
 }

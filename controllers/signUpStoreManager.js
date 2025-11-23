@@ -84,4 +84,6 @@ export const signUpStoreManager = async (req, res) => {
 
         connection.execSql(findStoreRequest);
     });
+    
+    connection.connect();
 }

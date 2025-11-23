@@ -14,6 +14,7 @@ const router = express.Router();
 // Routes
 router.post("/signIn", signIn);
 router.post("/signUp/cliente", signUpUser);
-router.route("/signUp/encargado").post(createStore).post(signUpStoreManager)
+router.post("/signUp/encargado/tienda", createStore);
+router.post("/signUp/encargado", signUpStoreManager);
 
 export default router;
