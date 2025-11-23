@@ -49,9 +49,7 @@ export const signIn = async (req, res) => {
                 expiresIn: "8h",
             });
 
-            return res
-                .status(200)
-                .json({ success: true, message: "Sesión iniciada correctamente", _jwt, userFind });
+            return res.status(200).json({ success: true, message: "Sesión iniciada correctamente", _jwt });
         })
         connection.execSql(checkRequest);
     });
