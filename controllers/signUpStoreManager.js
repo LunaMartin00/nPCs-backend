@@ -14,7 +14,7 @@ export const signUpStoreManager = async (req, res) => {
     connection.on("connect", (err) => {
         if (err) return res.status(500).json({ message: "No se ha podido conectar a la base de datos", err });
 
-        const checkQuery = "SELECT COUNT(*) AS count FROM Tienda WHERE correo_electronico = @email OR usuario = @username";
+        const checkQuery = "SELECT COUNT(*) AS count FROM Tienda WHERE correo_electronico = @email OR usuario = @username OR nombre_tienda = @storeName";
 
         const checkRequest = new Request(checkQuery, (err) => {
             if (err) return res.status(500).json({ message: "Error al verificar la existencia del encargado de tienda", err });
@@ -22,6 +22,7 @@ export const signUpStoreManager = async (req, res) => {
 
         checkRequest.addParameter("email", TYPES.VarChar, email);
         checkRequest.addParameter("username", TYPES.VarChar, username);
+        checkRequest.addParameter("storeName", TYPES.VarChar, storeName);
 
         let userExists = false;
         checkRequest.on("row", (columns) => {
