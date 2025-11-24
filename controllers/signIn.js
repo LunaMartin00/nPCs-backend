@@ -14,7 +14,7 @@ export const signIn = async (req, res) => {
     connection.on("connect", async (err) => {
         if (err) return res.status(500).json("No se ha podido conectar a la base de datos", err);
 
-        const managerQuery = "SELECT * FROM EncargadoDeTienda WHERE correo_electronico = @correo_electronico";
+        const managerQuery = "SELECT * FROM Tienda WHERE correo_electronico = @correo_electronico";
         const managerRequest = new Request(managerQuery, (err) => {
             if (err) {
                 connection.close();

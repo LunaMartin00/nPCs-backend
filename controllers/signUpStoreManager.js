@@ -3,9 +3,9 @@ import { Connection, Request, TYPES } from "tedious";
 import bcrypt from "bcrypt";
 
 export const signUpStoreManager = async (req, res) => {
-    const { firstNames, lastNames, email, username, password, storeName } = req.body;
+    const { firstNames, lastNames, email, username, password, storeName, storeUrl } = req.body;
 
-    if (!firstNames || !lastNames || !username || !email || !password || !storeName)
+    if (!firstNames || !lastNames || !username || !email || !password || !storeName || !storeUrl)
         return res.status(400).json({ message: "Hay campos incompletos en la información" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -14,76 +14,53 @@ export const signUpStoreManager = async (req, res) => {
     connection.on("connect", (err) => {
         if (err) return res.status(500).json({ message: "No se ha podido conectar a la base de datos", err });
 
-        const findStoreQuery = "SELECT TOP 1 * FROM Tienda WHERE nombre = @storeName";
-        const findStoreRequest = new Request(findStoreQuery, (err) => {
-            if (err) {
-                connection.close();
-                return res.status(500).json({ message: "Error al buscar la tienda", err });
-            }
+        const checkQuery = "SELECT COUNT(*) AS count FROM Tienda WHERE correo_electronico = @email OR usuario = @username";
+
+        const checkRequest = new Request(checkQuery, (err) => {
+            if (err) return res.status(500).json({ message: "Error al verificar la existencia del encargado de tienda", err });
         });
 
-        findStoreRequest.addParameter("storeName", TYPES.VarChar, storeName);
+        checkRequest.addParameter("email", TYPES.VarChar, email);
+        checkRequest.addParameter("username", TYPES.VarChar, username);
 
-        let storeId = null;
-        findStoreRequest.on("row", (columns) => {
-            storeId = columns[0].value;
-        })
+        let userExists = false;
+        checkRequest.on("row", (columns) => {
+            if (columns[0].value > 0) userExists = true;
+        });
 
-        findStoreRequest.on("requestCompleted", () => {
-            if (!storeId) {
+        checkRequest.on("requestCompleted", () => {
+            if (userExists) {
                 connection.close();
-                return res.status(404).json({ message: "Tienda no encontrada. Verifica el nombre de la tienda." });
+                return res.status(409).json({ message: "Ya existe ese encargado de tienda" });
             }
-           
-            const checkQuery = "SELECT COUNT(*) AS count FROM EncargadoDeTienda WHERE correo_electronico = @email OR usuario = @username";
 
-            const checkUserRequest = new Request(checkQuery, (err) => {
-                if (err) return res.status(500).json({ message: "Error al verificar la existencia del usuario", err });
-            });
+            const insertQuery = "INSERT INTO Tienda (nombres, apellidos, correo_electronico, usuario, contrasena, nombre_tienda, url_tienda) VALUES (@firstNames, @lastNames, @email, @username, @password, @storeName, @storeUrl)";
 
-            checkUserRequest.addParameter("email", TYPES.VarChar, email);
-            checkUserRequest.addParameter("username", TYPES.VarChar, username);
-
-            let userExists = false;
-            checkUserRequest.on("row", (columns) => {
-                if (columns[0].value > 0) userExists = true;
-            });
-
-            checkUserRequest.on("requestCompleted", () => {
-                if (userExists) {
+            const insertRequest = new Request(insertQuery, (err) => {
+                if (err) {
                     connection.close();
-                    return res.status(409).json({ message: "Ya existe este encargado de tienda" });
+                    return res.status(500).json({ message: "Error en la inserción del encargado de tienda", err });
                 }
-
-                const insertQuery = "INSERT INTO EncargadoDeTienda (nombres, apellidos, correo_electronico, usuario, contrasena, id_tienda) VALUES (@firstNames, @lastNames, @email, @username, @password, @storeId)";
-
-                const insertRequest = new Request(insertQuery, (err) => {
-                    if (err) {
-                        connection.close();
-                        return res.status(500).json({ message: "Error en la inserción del usuario", err });
-                    }
-                });
-
-                insertRequest.addParameter("firstNames", TYPES.VarChar, firstNames);
-                insertRequest.addParameter("lastNames", TYPES.VarChar, lastNames);
-                insertRequest.addParameter("username", TYPES.VarChar, username);
-                insertRequest.addParameter("email", TYPES.VarChar, email);
-                insertRequest.addParameter("password", TYPES.VarChar, hashedPassword);
-                insertRequest.addParameter("storeId", TYPES.Int, storeId)
-
-                insertRequest.on("requestCompleted", () => {
-                    connection.close();
-                    res.status(201).json({ message: "Se ha creado el usuario" });
-                });
-
-                connection.execSql(insertRequest);
             });
 
-            connection.execSql(checkUserRequest);
+            insertRequest.addParameter("firstNames", TYPES.VarChar, firstNames);
+            insertRequest.addParameter("lastNames", TYPES.VarChar, lastNames);
+            insertRequest.addParameter("username", TYPES.VarChar, username);
+            insertRequest.addParameter("email", TYPES.VarChar, email);
+            insertRequest.addParameter("password", TYPES.VarChar, hashedPassword);
+            insertRequest.addParameter("storeName", TYPES.VarChar, storeName);
+            insertRequest.addParameter("storeUrl", TYPES.VarChar, storeUrl);
+
+            insertRequest.on("requestCompleted", () => {
+                connection.close();
+                res.status(201).json({ message: "Se ha creado el encargado de tienda" });
+            });
+
+            connection.execSql(insertRequest);
         });
 
-        connection.execSql(findStoreRequest);
+        connection.execSql(checkRequest);
     });
-    
+
     connection.connect();
 }
