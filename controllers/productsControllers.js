@@ -1,16 +1,3 @@
-// controllers/productsController.js
-
-/* MOCK DATA (Datos Simulados)
-   Aquí simulamos los datos que vendrían de Amazon, Cyberpuerta, etc.
-   Esto permite que el frontend muestre la comparación sin configurar scraping complejo.
-*/
-
-// controllers/productsController.js
-
-/* DATA REAL EL SALVADOR (Actualizado)
-   Tiendas incluidas: KPC Hardware, AEON, Kayfa Store, Zona Digital.
-   Precios en USD.
-*/
 
 const productsData = [
     // --- PROCESADORES ---
