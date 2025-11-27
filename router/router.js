@@ -9,6 +9,10 @@ import { signUpStoreManager } from "../controllers/signUpStoreManager.js";
 import { addProducts } from "../controllers/addProducts.js";
 import { getProductsByCategory } from "../controllers/getProductsByCategory.js";
 import { searchProducts } from "../controllers/getProductsByCategory.js";
+import { createBuild } from "../controllers/createBuild.js";
+import { getAllBuilds } from "../controllers/getAllBuilds.js";
+import { getBuildDetails } from "../controllers/getBuildDetails.js";
+import { getUserBuilds } from "../controllers/getUserBuilds.js";
 
 const router = express.Router();
 
@@ -20,3 +24,8 @@ router.post("/addProduct", verifyToken, addProducts)
 router.get("/products/:category", getProductsByCategory);
 router.get("/search", searchProducts);
 export default router;
+
+router.post("/builds", verifyToken, createBuild);
+router.get("/builds", getAllBuilds);
+router.get("/builds/:id/details", getBuildDetails);
+router.get("/builds/user/:id_cliente", verifyToken, getUserBuilds);
