@@ -7,7 +7,7 @@ import { signIn } from "../controllers/signIn.js";
 import { signUpUser } from "../controllers/signUpUser.js";
 import { signUpStoreManager } from "../controllers/signUpStoreManager.js";
 // import { addProduct } from "../controllers/addProduct.js";
-import { getProductsByCategory } from "../controllers/productsControllers.js";
+import { getProductsByCategory } from "../controllers/getProductsByCategory.js";
 
 const router = express.Router();
 
