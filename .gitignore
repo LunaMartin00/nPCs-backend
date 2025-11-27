@@ -1,3 +1,2 @@
 controllers/addProduct.js
-controllers/addProducts.js
 controllers/getProductsByName.js
