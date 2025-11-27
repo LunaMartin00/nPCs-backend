@@ -1,10 +1,10 @@
 export const config = {
-    server: 'localhost',
+    server: 'MARTIN\\EXPRESS',
     authentication: {
         type: 'default',
         options: {
             userName: 'sa',
-            password: '123456'
+            password: '1234'
         }
     },
     options: {
